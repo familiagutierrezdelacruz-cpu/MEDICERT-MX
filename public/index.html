@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Certificados Médicos - IMSS Bienestar</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mejoras.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap"
+        rel="stylesheet">
+    <!-- Librería para OCR (Reconocimiento de Texto en Imágenes) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+</head>
+
+<body>
+    <!-- Capa de Seguridad (Login) -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-box">
+            <div class="login-header">
+                <div class="imss-logo-large">IMSS BIENESTAR</div>
+                <h2>Control de Acceso</h2>
+                <p>Ingresa tu usuario y contraseña</p>
+            </div>
+            <div class="login-form">
+                <div class="form-group">
+                    <input type="text" id="loginUser" class="no-upper" placeholder="Usuario" autocomplete="username" autocapitalize="none" autofocus>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="loginPass" class="no-upper" placeholder="Contraseña" autocomplete="current-password">
+                </div>
+                <button id="loginBtn" class="btn-primary full-width-btn">Entrar al Sistema</button>
+                <p id="loginError" class="error-msg" style="display: none;"></p>
+            </div>
+            <div class="login-footer">
+                <p>Uso exclusivo de Personal Autorizado</p>
+            </div>
+        </div>
+    </div>
+    <div class="app-container">
+        <header class="main-header">
+            <div class="logo-area">
+                <h1>MediCert <span class="badge">MX</span> <span id="cloudStatus"
+                        class="cloud-status-badge connected">Servidor</span></h1>
+                <p>Generador Profesional de Certificados Médicos</p>
+            </div>
+            <div class="actions">
+                <div class="user-chip"><span id="userName">—</span><button id="logoutBtn" class="btn-text-small" title="Cerrar sesión">Salir</button></div>
+                <button id="editConfigBtn" class="btn-secondary" title="Editar datos de la unidad">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z">
+                        </path>
+                    </svg>
+                    Configuración
+                </button>
+                <button id="uploadImageBtn" class="btn-primary" title="Escanear foto de ID o Nota">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z">
+                        </path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                    Escanear Foto
+                </button>
+                <input type="file" id="imageInput" style="display: none;" accept="image/*">
+                <button id="smartPasteBtn" class="btn-secondary" title="Pegar datos del paciente (AI)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                        <path d="M9 14h6"></path>
+                        <path d="M9 18h6"></path>
+                        <path d="M9 10h6"></path>
+                    </svg>
+                    Pegado Inteligente
+                </button>
+                <button id="newBtn" class="btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"></path>
+                        <polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon>
+                    </svg>
+                    Nuevo Paciente
+                </button>
+                <button id="printBtn" class="btn-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    Imprimir Certificado
+                </button>
+            </div>
+        </header>
+
+        <main class="content">
+            <!-- Form Section -->
+            <section class="form-section">
+                <div class="card">
+                    <h2>Datos del Certificado</h2>
+                    <div id="editBanner" class="edit-banner" style="display:none;">
+                        <span id="editBannerText"></span>
+                        <span class="banner-actions"><button type="button" id="useForNewBtn" class="btn-text-small">Nuevo certificado para este paciente</button>
+                        <button type="button" id="exitEditBtn" class="btn-text-small">Paciente nuevo</button></span>
+                    </div>
+                    <form id="certForm">
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="folio">Folio No. <span id="folioHint" class="folio-hint">se asigna al imprimir</span></label>
+                                <input type="text" id="folio" value="" readonly tabindex="-1">
+                            </div>
+                            <div class="form-group">
+                                <label for="unidad_codigo">Código de Unidad</label>
+                                <input type="text" id="unidad_codigo" value="" readonly tabindex="-1">
+                            </div>
+                        </div>
+
+                        <div class="divider">Datos del Médico</div>
+                        <div class="form-group saved-doctors-group">
+                            <label for="doctor_select">Seleccionar Médico Guardado</label>
+                            <div class="input-with-btn">
+                                <select id="doctor_select">
+                                    <option value="">-- Escribir otro médico --</option>
+                                </select>
+                                <button type="button" id="saveDoctorBtn" class="btn-icon" title="Guardar médico actual">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z">
+                                        </path>
+                                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                        <polyline points="7 3 7 8 15 8"></polyline>
+                                    </svg>
+                                </button>
+                                <button type="button" id="deleteDoctorBtn" class="btn-icon btn-delete-red"
+                                    title="Eliminar médico seleccionado" >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path
+                                            d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                        </path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="doctor_name">Nombre del Médico</label>
+                            <input type="text" id="doctor_name" placeholder="">
+                        </div>
+                        <div class="form-group">
+                            <label for="cedula">Cédula Profesional</label>
+                            <input type="text" id="cedula" placeholder="" value="">
+                        </div>
+                        <div class="form-group">
+                            <label for="doctor_area">Área / Servicio</label>
+                            <select id="doctor_area">
+                                <option value="">-- Seleccionar Área --</option>
+                                <option value="NUCLEO 1">NUCLEO 1</option>
+                                <option value="NUCLEO 2">NUCLEO 2</option>
+                                <option value="NUCLEO 3">NUCLEO 3</option>
+                                <option value="NUCLEO 4">NUCLEO 4</option>
+                                <option value="NUCLEO 5">NUCLEO 5</option>
+                                <option value="NUCLEO 6">NUCLEO 6</option>
+                                <option value="URGENCIAS">URGENCIAS</option>
+                                <option value="NOCTURNO A">NOCTURNO A</option>
+                                <option value="NOCTURNO B">NOCTURNO B</option>
+                                <option value="JORNADA ACUMULADA">JORNADA ACUMULADA</option>
+                                <option value="FIN DE SEMANA Y FESTIVOS">FIN DE SEMANA Y FESTIVOS</option>
+                                <option value="COORDINACION MEDICA">COORDINACION MEDICA</option>
+                            </select>
+                        </div>
+
+                        <div class="divider">Datos del Paciente</div>
+                        <p class="helper-text">Usa el botón <b>Pegado Inteligente</b> arriba para llenar estos datos
+                            automáticamente desde una foto.</p>
+                        <div class="form-group autocomplete">
+                            <label for="curp">CURP <span class="label-hint">escribe CURP o nombre para buscar pacientes anteriores</span></label>
+                            <input type="text" id="curp" placeholder="18 caracteres" maxlength="18" autocomplete="off">
+                            <div id="curpSuggest" class="suggest-list" style="display:none;"></div>
+                        </div>
+                        <div id="patientInfo" class="patient-info" style="display:none;"></div>
+                        <div class="form-group autocomplete">
+                            <label for="patient_name">Nombre del Paciente</label>
+                            <input type="text" id="patient_name" placeholder="" autocomplete="off">
+                            <div id="nameSuggest" class="suggest-list" style="display:none;"></div>
+                        </div>
+                        <div class="form-group internal-field">
+                            <label for="imss_registered">¿Se realizó trámite IMSS Bienestar? <span
+                                    class="badge-internal">Solo Interno</span></label>
+                            <select id="imss_registered">
+                                <option value="NO">NO</option>
+                                <option value="SI">SI</option>
+                            </select>
+                        </div>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="sex">Sexo</label>
+                                <select id="sex">
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="FEMENINO">Femenino</option>
+                                    <option value="MASCULINO">Masculino</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="age">Edad (años)</label>
+                                <input type="number" id="age" value="">
+                            </div>
+                        </div>
+
+                        <div class="divider">Estado de Salud</div>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="blood_group">Grupo Sanguíneo</label>
+                                <input type="text" id="blood_group" placeholder="Ej: O" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="rh_factor">Factor RH</label>
+                                <select id="rh_factor">
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="POSITIVO">Positivo (+)</option>
+                                    <option value="NEGATIVO">Negativo (-)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="allergies">Alergias</label>
+                            <input type="text" id="allergies" placeholder="NEGADAS" value="NEGADAS">
+                        </div>
+                        <div class="form-group">
+                            <label for="purpose">Finalidad del Trámite</label>
+                            <input type="text" id="purpose" placeholder="PERSONALES Y/O LABORALES"
+                                value="PERSONALES Y/O LABORALES">
+                        </div>
+                        <div class="form-group">
+                            <label for="observations">Observaciones</label>
+                            <textarea id="observations" rows="2"
+                                placeholder="Paciente se encuentra física y mentalmente sano(a)."></textarea>
+                        </div>
+
+                        <div class="divider">Lugar y Fecha</div>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="day">Día</label>
+                                <input type="number" id="day" value="18">
+                            </div>
+                            <div class="form-group">
+                                <label for="month">Mes</label>
+                                <select id="month">
+                                    <option value="ENERO">Enero</option>
+                                    <option value="FEBRERO" selected>Febrero</option>
+                                    <option value="MARZO">Marzo</option>
+                                    <option value="ABRIL">Abril</option>
+                                    <option value="MAYO">Mayo</option>
+                                    <option value="JUNIO">Junio</option>
+                                    <option value="JULIO">Julio</option>
+                                    <option value="AGOSTO">Agosto</option>
+                                    <option value="SEPTIEMBRE">Septiembre</option>
+                                    <option value="OCTUBRE">Octubre</option>
+                                    <option value="NOVIEMBRE">Noviembre</option>
+                                    <option value="DICIEMBRE">Diciembre</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="year">Año</label>
+                                <input type="number" id="year" value="2026">
+                            </div>
+                        </div>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label for="city">Ciudad/Municipio</label>
+                                <input type="text" id="city" value="SUCHIAPA">
+                            </div>
+                            <div class="form-group">
+                                <label for="state">Estado</label>
+                                <input type="text" id="state" value="Chiapas">
+                            </div>
+                        </div>
+
+                        <div class="divider">Autoridades</div>
+                        <div class="form-group">
+                            <label for="health_center">Centro de Salud</label>
+                            <input type="text" id="health_center" value="CENTRO DE SALUD URBANO SUCHIAPA">
+                        </div>
+                        <div class="form-group">
+                            <label for="coordinator">Coordinador Médico</label>
+                            <input type="text" id="coordinator" value="DR. WILBER GUTIERREZ LEON">
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card history-card">
+                    <div class="history-card-header">
+                        <h3>Historial de certificados</h3>
+                        <button id="viewReportBtn" class="btn-text-small" title="Generar reporte detallado">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            Ver Reporte
+                        </button>
+                    </div>
+                    <input type="search" id="historySearch" class="history-search" placeholder="Buscar por nombre, CURP, folio o médico..." autocomplete="off">
+                    <p id="historyCount" class="history-count"></p>
+                    <div id="historyList" class="history-list">
+                        <p class="empty-msg">Cargando...</p>
+                    </div>
+                    <button type="button" id="historyMore" class="btn-secondary full-width-btn" style="display:none; margin-top:10px;">Ver más</button>
+                </div>
+            </section>
+
+            <!-- Preview Section -->
+            <section class="preview-section">
+                <div class="certificate-wrapper" id="capture">
+                    <div class="certificate-page">
+                        <div class="cert-header">
+                            <div class="logos">
+                                <div class="gov-logo">
+                                    <span class="gold">Gobierno de</span> <span class="dark">México</span>
+                                </div>
+                                <div class="imss-logo">
+                                    <div class="imss-icon">IMSS BIENESTAR</div>
+                                    <div class="imss-sub">SERVICIOS PÚBLICOS DE SALUD</div>
+                                </div>
+                            </div>
+                            <div class="folio-info">
+                                <span id="view-unidad-codigo">CM/CSU SUCHIAPA/CS1B002415</span> / FOLIO No. <span
+                                    id="view-folio" class="folio-num">195</span>
+                            </div>
+                        </div>
+
+                        <div class="cert-title">
+                            CERTIFICADO MÉDICO
+                        </div>
+
+                        <div class="cert-body">
+                            <p class="to-whom">A QUIEN CORRESPONDA:</p>
+
+                            <p class="declaration">
+                                El suscrito Médico Cirujano Dr. <span class="placeholder-line"
+                                    id="view-doctor-name">__________</span> dependiente de los
+                                Servicios Públicos de Salud del Instituto Mexicano del Seguro Social para el Bienestar
+                                (IMSS-BIENESTAR), legalmente autorizado para el ejercicio de su profesión con cedula
+                                profesional <span class="placeholder-line" id="view-cedula">__________</span>.
+                            </p>
+
+                            <div class="certifica-label">
+                                C E R T I F I C A
+                            </div>
+
+                            <p class="patient-line">
+                                Que El (La) C. <span class="placeholder-line full-width"
+                                    id="view-patient-name">__________</span>
+                            </p>
+                            <p class="curp-line">
+                                CURP: <span class="placeholder-line medium-width" id="view-curp">__________</span>
+                            </p>
+
+                            <p class="details-line">
+                                Paciente del sexo <span class="placeholder-line small-width"
+                                    id="view-sex">__________</span> de
+                                <span class="placeholder-line tiny-width" id="view-age">__</span> años quien posterior a
+                                una
+                                valoración médica; se encuentra
+                                física y mentalmente sano(a).
+                            </p>
+
+                            <p class="vitals-line">
+                                GRUPO SANGUÍNEO <span class="placeholder-line tiny-width" id="view-blood-group">__</span>
+                                RH <span class="placeholder-line small-width" id="view-rh-factor">__________</span>
+                                ALERGIAS: <span class="placeholder-line medium-width" id="view-allergies">NEGADAS</span>
+                            </p>
+
+                            <p class="purpose-line">
+                                Por lo que expide la presente a petición del Interesado(a) para fines de tramite <span
+                                    class="highlight-text" id="view-purpose">PERSONALES Y/O LABORALES</span>.
+                            </p>
+
+                            <div class="observations-block">
+                                <span class="obs-title">OBSERVACIONES</span>
+                                <p id="view-observations">Paciente se encuentra física y mentalmente sano(a).</p>
+                            </div>
+
+                            <p class="date-line">
+                                Se extiende la presente a petición de la parte interesada a los <span
+                                    class="placeholder-line tiny-width" id="view-day">18</span> días del mes de <span
+                                    class="placeholder-line small-width" id="view-month">FEBRERO</span> del 20 <span
+                                    class="placeholder-line tiny-width" id="view-year">26</span> en <span
+                                    class="placeholder-line medium-width" id="view-city">SUCHIAPA</span>, <span
+                                    id="view-state">Chiapas</span>.
+                            </p>
+                        </div>
+
+                        <div class="cert-footer">
+                            <div class="signatures">
+                                <div class="sig-block left">
+                                    <div class="sig-line"></div>
+                                    <p>DR. (a) <span id="view-doctor-footer">__________</span></p>
+                                    <p class="unit-name" id="view-health-center-footer">CENTRO DE SALUD URBANO SUCHIAPA
+                                    </p>
+                                    <p class="area-name" id="view-doctor-area">__________</p>
+                                </div>
+                                <div class="seal-box">
+                                    SELLO DE LA UNIDAD
+                                </div>
+                            </div>
+
+                            <div class="coordinator-area">
+                                <p>Vo.Bo.</p>
+                                <p class="coord-name" id="view-coordinator-footer">DR. WILBER GUTIERREZ LEON</p>
+                                <p>Coordinador Médico</p>
+                            </div>
+                        </div>
+
+                        <div class="bottom-strip">
+                            <div class="women-year-logo">
+                                <img id="view-official-logo" src="logo_2026.png" alt="Logo Oficial"
+                                    style="max-height: 80px; width: auto;">
+                            </div>
+                            <div class="maroon-bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Setup Modal -->
+    <div id="setupModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content config-modal" style="max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header config-header">
+                <h2>Configuración</h2>
+                <button type="button" class="btn-close-report" id="closeConfigBtn" title="Cerrar">&times;</button>
+            </div>
+
+            <div class="config-tabs">
+                <button type="button" class="config-tab active" data-tab="tabUnit">Unidad y folios</button>
+                <button type="button" class="config-tab" data-tab="tabUsers">Usuarios</button>
+                <button type="button" class="config-tab" data-tab="tabData">Datos</button>
+                <button type="button" class="config-tab" data-tab="tabMe">Mi contraseña</button>
+            </div>
+
+            <!-- Unidad -->
+            <form id="setupForm" class="config-pane" data-pane="tabUnit">
+                <div class="form-group">
+                    <label for="setup_unit_name">Nombre de la Unidad de Salud</label>
+                    <input type="text" id="setup_unit_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="setup_clues">Clave CLUES / Código de Unidad</label>
+                    <input type="text" id="setup_clues" required>
+                </div>
+                <div class="form-group">
+                    <label for="setup_coordinator">Nombre del Coordinador Médico</label>
+                    <input type="text" id="setup_coordinator" required>
+                </div>
+                <div class="form-group-row">
+                    <div class="form-group"><label for="setup_city">Ciudad / Municipio</label><input type="text" id="setup_city" required></div>
+                    <div class="form-group"><label for="setup_state">Estado</label><input type="text" id="setup_state" required></div>
+                </div>
+                <div class="form-group">
+                    <label for="setup_purpose">Finalidad predeterminada</label>
+                    <input type="text" id="setup_purpose">
+                </div>
+                <div class="form-group">
+                    <label for="setup_observations">Observaciones predeterminadas</label>
+                    <input type="text" id="setup_observations">
+                </div>
+                <div class="form-group">
+                    <label for="setup_folio">Siguiente folio</label>
+                    <input type="number" id="setup_folio" min="1">
+                    <p class="helper-text">Los folios se asignan solos y nunca se repiten. Solo cámbialo para empezar una numeración nueva (debe ser mayor al último usado).</p>
+                </div>
+                <button type="submit" class="btn-primary full-width-btn">Guardar cambios</button>
+            </form>
+
+            <!-- Usuarios -->
+            <div class="config-pane" data-pane="tabUsers" style="display:none;">
+                <p class="helper-text">Cada persona que use la app entra con su propio usuario. El <b>administrador</b> puede cambiar la configuración, cancelar folios y manejar usuarios.</p>
+                <div id="usersList" class="users-list"></div>
+                <div class="divider">Agregar usuario</div>
+                <form id="userForm">
+                    <div class="form-group"><label for="nu_name">Nombre completo</label><input type="text" id="nu_name" required></div>
+                    <div class="form-group-row">
+                        <div class="form-group"><label for="nu_user">Usuario</label><input type="text" id="nu_user" class="no-upper" autocapitalize="none" required></div>
+                        <div class="form-group"><label for="nu_pass">Contraseña</label><input type="text" id="nu_pass" class="no-upper" minlength="6" required></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="nu_role">Tipo</label>
+                        <select id="nu_role"><option value="capturista">Capturista / Médico</option><option value="admin">Administrador</option></select>
+                    </div>
+                    <button type="submit" class="btn-primary full-width-btn">Agregar usuario</button>
+                </form>
+            </div>
+
+            <!-- Datos -->
+            <div class="config-pane" data-pane="tabData" style="display:none;">
+                <p class="helper-text"><b>Respaldo:</b> descarga una copia completa de pacientes, médicos y certificados. El servidor además guarda un respaldo diario.</p>
+                <button type="button" id="exportDataBtn" class="btn-secondary full-width-btn">Descargar respaldo</button>
+                <div class="divider">Importar</div>
+                <p class="helper-text">Sube el archivo <b>respaldo_certificados_….json</b> que exportaste de la versión anterior (o un respaldo de esta). No se duplican folios que ya existan.</p>
+                <button type="button" id="importDataBtn" class="btn-secondary full-width-btn">Elegir archivo e importar</button>
+                <input type="file" id="importFile" style="display: none;" accept=".json,application/json">
+                <div id="importResult" class="import-result"></div>
+            </div>
+
+            <!-- Mi contraseña -->
+            <form id="myPassForm" class="config-pane" data-pane="tabMe" style="display:none;">
+                <div class="form-group"><label for="mp_current">Contraseña actual</label><input type="password" id="mp_current" class="no-upper" required></div>
+                <div class="form-group"><label for="mp_new">Nueva contraseña</label><input type="password" id="mp_new" class="no-upper" minlength="6" required></div>
+                <div class="form-group"><label for="mp_new2">Repite la nueva contraseña</label><input type="password" id="mp_new2" class="no-upper" minlength="6" required></div>
+                <button type="submit" class="btn-primary full-width-btn">Cambiar contraseña</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content report-wide">
+            <div class="modal-header">
+                <h2>Reporte de Certificados</h2>
+                <div class="modal-actions">
+                    <button id="printReportBtn" class="btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                            <rect x="6" y="14" width="12" height="8"></rect>
+                        </svg>
+                        Imprimir
+                    </button>
+                    <button class="btn-close-report" id="closeReportBtn">&times;</button>
+                </div>
+            </div>
+            <div class="report-filters">
+                <div><label for="repFrom">Desde</label><input type="date" id="repFrom"></div>
+                <div><label for="repTo">Hasta</label><input type="date" id="repTo"></div>
+                <div><label for="repDoctor">Médico</label><select id="repDoctor"><option value="">Todos</option></select></div>
+                <div><label for="repStatus">Estado</label><select id="repStatus"><option value="">Todos</option><option value="VIGENTE">Vigentes</option><option value="CANCELADO">Cancelados</option></select></div>
+                <button id="repApply" class="btn-secondary">Aplicar</button>
+                <button id="repCsv" class="btn-secondary" title="Descargar para Excel">Excel (CSV)</button>
+            </div>
+            <div id="reportPrintArea" class="report-container">
+                <div class="report-header-print">
+                    <h1 id="repUnitName">UNIDAD DE SALUD</h1>
+                    <p id="repClues">CLUES: -</p>
+                    <p id="repLocation">Ubicación: -</p>
+                    <p id="repPeriod"></p>
+                    <div class="report-title-line">RELACIÓN DE CERTIFICADOS MÉDICOS EXPEDIDOS</div>
+                </div>
+                <div class="table-responsive">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Folio</th>
+                                <th>Nombre del Paciente</th>
+                                <th>CURP</th>
+                                <th>Finalidad</th>
+                                <th>Médico que Certifica</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                            <!-- Filled with JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <p id="repTotal" class="rep-total"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+
+</html>
