@@ -79,16 +79,30 @@ input.invalid { border-color: #d93025 !important; box-shadow: 0 0 0 3px rgba(217
 
 /* Botones del encabezado en una sola fila */
 .main-header { padding: 12px 20px; }
-.logo-area { flex-shrink: 1; min-width: 0; }
 .logo-area h1 { font-size: 1.6rem; }
-.logo-area p { font-size: .8rem; line-height: 1.3; }
-.main-header .actions { flex-wrap: nowrap; gap: 8px; align-items: center; flex-shrink: 0; }
+.logo-area p { font-size: .8rem; }
+.main-header .actions { flex-wrap: nowrap; gap: 8px; align-items: center; }
 .main-header .actions .btn-primary,
 .main-header .actions .btn-secondary { padding: 10px 14px; gap: 7px; white-space: nowrap; font-size: .85rem; }
 .main-header .actions svg { width: 18px; height: 18px; flex-shrink: 0; }
 .user-chip span { max-width: 170px; }
+/* En pantallas más angostas solo se ven los íconos de los botones secundarios */
 @media (max-width: 1350px) {
   .logo-area p { display: none; }
-  .main-header .actions .btn-secondary { font-size: 0; gap: 0; padding: 10px; }
+  .main-header .actions .btn-secondary:not(#logoutBtn) { font-size: 0; gap: 0; padding: 10px; }
   .main-header .actions .btn-secondary svg { width: 20px; height: 20px; }
 }
+.logo-area { flex-shrink: 1; min-width: 0; }
+.logo-area p { line-height: 1.3; }
+.main-header .actions { flex-shrink: 0; }
+
+/* Logo */
+.brand-seal { width: 52px; height: 52px; flex-shrink: 0; }
+.brand-word { display: inline-flex; align-items: baseline; gap: 6px; }
+.brand-mx { font-family: 'Inter', sans-serif; font-size: .7rem; letter-spacing: .35em; color: var(--primary); font-weight: 600; }
+.login-seal { width: 110px; height: 110px; display: block; margin: 0 auto 8px; }
+.login-brand { font-family: 'Playfair Display', serif; font-size: 2.1rem; color: #621132; text-align: center; line-height: 1.1; }
+.login-brand span { font-family: 'Inter', sans-serif; font-size: .75rem; letter-spacing: .4em; vertical-align: middle; opacity: .85; }
+.login-inst { text-align: center; color: #a8862a; font-size: .72rem; letter-spacing: .25em; font-weight: 600; margin: 6px 0 18px; }
+
+.login-form input.no-upper { letter-spacing: normal; font-size: 1rem; }

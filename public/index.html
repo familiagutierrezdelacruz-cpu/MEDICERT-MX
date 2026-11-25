@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de Certificados Médicos - IMSS Bienestar</title>
+    <link rel="icon" type="image/svg+xml" href="img/sello.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#621132">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="mejoras.css">
     <link
@@ -19,7 +24,9 @@
     <div id="loginOverlay" class="login-overlay">
         <div class="login-box">
             <div class="login-header">
-                <div class="imss-logo-large">IMSS BIENESTAR</div>
+                <img src="img/sello.svg" alt="" class="login-seal">
+                <div class="login-brand">MediCert <span>MX</span></div>
+                <div class="login-inst">IMSS BIENESTAR</div>
                 <h2>Control de Acceso</h2>
                 <p>Ingresa tu usuario y contraseña</p>
             </div>
@@ -41,7 +48,7 @@
     <div class="app-container">
         <header class="main-header">
             <div class="logo-area">
-                <h1>MediCert <span class="badge">MX</span> <span id="cloudStatus"
+                <h1><img src="img/sello-medio.svg" alt="" class="brand-seal"><span class="brand-word">MediCert <span class="brand-mx">MX</span></span> <span id="cloudStatus"
                         class="cloud-status-badge connected">Servidor</span></h1>
                 <p>Generador Profesional de Certificados Médicos</p>
             </div>
