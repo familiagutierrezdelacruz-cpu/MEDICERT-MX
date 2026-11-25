@@ -76,3 +76,19 @@ input.invalid { border-color: #d93025 !important; box-shadow: 0 0 0 3px rgba(217
 .user-chip span { font-size: .75rem; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
 .user-chip .btn-text-small { padding: 0; }
 .report-filters { padding: 0 30px 15px; }
+
+/* Botones del encabezado en una sola fila */
+.main-header { padding: 12px 20px; }
+.logo-area { flex-shrink: 1; min-width: 0; }
+.logo-area h1 { font-size: 1.6rem; }
+.logo-area p { font-size: .8rem; line-height: 1.3; }
+.main-header .actions { flex-wrap: nowrap; gap: 8px; align-items: center; flex-shrink: 0; }
+.main-header .actions .btn-primary,
+.main-header .actions .btn-secondary { padding: 10px 14px; gap: 7px; white-space: nowrap; font-size: .85rem; }
+.main-header .actions svg { width: 18px; height: 18px; flex-shrink: 0; }
+.user-chip span { max-width: 170px; }
+@media (max-width: 1350px) {
+  .logo-area p { display: none; }
+  .main-header .actions .btn-secondary { font-size: 0; gap: 0; padding: 10px; }
+  .main-header .actions .btn-secondary svg { width: 20px; height: 20px; }
+}

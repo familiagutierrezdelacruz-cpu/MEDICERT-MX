@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function boot() {
         const { user } = await api('GET', '/api/me');
         state.me = user;
-        $('userName').textContent = user.name + (user.role === 'admin' ? ' · Admin' : '');
+        $('userName').textContent = user.name; $('userName').title = user.role === 'admin' ? 'Administrador' : 'Capturista';
         $('deleteDoctorBtn').style.display = user.role === 'admin' ? '' : 'none';
         state.config = await api('GET', '/api/config');
         await loadDoctors();
